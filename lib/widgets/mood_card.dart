@@ -1,6 +1,9 @@
-import 'package:mental_health_tracker/screens/list_moodentry.dart';
-import 'package:mental_health_tracker/screens/moodentry_form.dart';
 import 'package:flutter/material.dart';
+import 'package:mental_health_tracker/screens/moodentry_form.dart';
+import 'package:mental_health_tracker/screens/list_moodentry.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:mental_health_tracker/screens/login.dart'; 
 
 class ItemHomepage {
   final String name;
@@ -10,7 +13,7 @@ class ItemHomepage {
 }
 
 class ItemCard extends StatelessWidget {
-  // Menampilkan kartu dengan ikon dan nama.
+  // Displaying a card with an icon and name.
 
   final ItemHomepage item;
 
@@ -18,42 +21,60 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Material(
-      // Menentukan warna latar belakang dari tema aplikasi.
       color: Theme.of(context).colorScheme.secondary,
-      // Membuat sudut kartu melengkung.
       borderRadius: BorderRadius.circular(12),
-
       child: InkWell(
-        // Aksi ketika kartu ditekan.
-        // Area responsif terhadap sentuhan
-          onTap: () {
-            // Memunculkan SnackBar ketika diklik
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                  content: Text("Kamu telah menekan tombol ${item.name}!")));
+        // Asynchronous action when the card is tapped
+        onTap: () async {
+          // Show a SnackBar when tapped
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+                content: Text("Kamu telah menekan tombol ${item.name}!")));
 
-            // Navigate ke route yang sesuai (tergantung jenis tombol)
-            if (item.name == "Tambah Mood") {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const MoodEntryFormPage()));
+          // Navigate to the appropriate route based on the button type
+          if (item.name == "Tambah Mood") {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const MoodEntryFormPage()));
+          } else if (item.name == "Lihat Mood") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MoodEntryPage()),
+            );
+          } 
+          // Added asynchronous logout functionality
+          else if (item.name == "Logout") {
+            final response = await request.logout(
+                // TODO: Replace with your app's URL and ensure the trailing slash (/)
+                "http://localhost:8000/auth/logout/");
+            String message = response["message"];
+            if (context.mounted) {
+              if (response['status']) {
+                String uname = response["username"];
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("$message Sampai jumpa, $uname."),
+                ));
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                  ),
+                );
               }
-
-            else if (item.name == "Lihat Mood") {
-                  Navigator.push(context,
-                      MaterialPageRoute(
-                          builder: (context) => const MoodEntryPage()
-                      ),
-                  );
-              }
-          },
-        // Container untuk menyimpan Icon dan Text
+            }
+          }
+        },
+        // Container to hold the Icon and Text
         child: Container(
           padding: const EdgeInsets.all(8),
           child: Center(
             child: Column(
-              // Menyusun ikon dan teks di tengah kartu.
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
