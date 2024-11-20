@@ -47,7 +47,7 @@ class ItemCard extends StatelessWidget {
           // Added asynchronous logout functionality
           else if (item.name == "Logout") {
             final response = await request.logout(
-                // TODO: Replace with your app's URL and ensure the trailing slash (/)
+        
                 "http://localhost:8000/auth/logout/");
             String message = response["message"];
             if (context.mounted) {
